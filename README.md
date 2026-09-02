@@ -1,2 +1,54 @@
-# agea_ortofoto_2022-23-24
-Caricare le ortofoto AGEA con un click
+# AgEA Ortofoto 2022-23-24
+
+Plugin QGIS per caricare con un click le ortofoto AGEA 2022, 2023 e 2024 in un
+gruppo dedicato del progetto.
+
+## Cosa fa
+
+Aggiunge un pulsante in barra degli strumenti (e una voce nel menu Web) che
+carica i tre servizi ArcGIS ImageServer delle Ortofoto AgEA pubblicati sul
+[Geoportale AgEA](https://geoportale.agea.gov.it), organizzandoli in un gruppo
+**"AGEA 2022-23-24"** con il 2024 in cima, unico anno visibile all'avvio.
+Se il gruppo esiste gia' viene ricreato, cosi' i lanci successivi non
+accumulano layer duplicati.
+
+Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
+
+## Requisiti
+
+- QGIS >= 3.20 (compatibile anche con QGIS 4.x / Qt6)
+- Connessione internet (i dati sono serviti in streaming da AGEA, nessun
+  download locale)
+
+## Installazione
+
+1. Scarica o clona questo repository.
+2. Copia la cartella nella directory dei plugin di QGIS, ad esempio:
+   - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
+   - Windows: `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
+3. Attiva il plugin da **Plugin > Gestisci e installa plugin**.
+
+## Utilizzo
+
+Clicca sull'icona "Carica Ortofoto AgEA" in barra degli strumenti: il gruppo
+con i tre servizi viene creato (o ricreato) nel progetto corrente. Per vedere
+le immagini e' necessario zoomare oltre la scala 1:50.000: a scale piu' basse
+gli ImageServer non restituiscono contenuto.
+
+## Note tecniche
+
+Le richieste agli ImageServer vanno fatte con i parametri `layer` e `format`
+vuoti: valorizzarli fa restituire al server immagini completamente
+trasparenti, perche' un ImageServer non ha sotto-layer numerati e un formato
+esplicito sovrascrive quello di default (`jpgpng`), l'unico che gestisce
+correttamente il nodata.
+
+## Licenza
+
+Codice distribuito con licenza [GPL v2](LICENSE) (o successiva).
+I dati delle ortofoto sono pubblicati da AGEA in licenza CC BY 4.0.
+
+## Ringraziamenti
+
+- [Andrea Borruso](https://github.com/aborruso) per l'idea
+- [AGEA](https://geoportale.agea.gov.it/) per aver condiviso i dati in CC BY 4.0
