@@ -1,5 +1,7 @@
 # AgEA Ortofoto 2022-23-24
 
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=pigreco.agea_ortofoto_2022-23-24)
+
 Plugin QGIS per caricare con un click le ortofoto AGEA 2022, 2023 e 2024 in un
 gruppo dedicato del progetto.
 
