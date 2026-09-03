@@ -3,7 +3,7 @@ name=AgEA Ortofoto
 qgisMinimumVersion=3.20
 qgisMaximumVersion=4.99
 description=Load AgEA 2022, 2023 and 2024 orthophotos in one click, grouped together, or pick a single Italian region. / Carica in un click le Ortofoto AgEA 2022, 2023 e 2024 raggruppate, oppure seleziona una singola regione.
-version=0.3
+version=0.4
 author=Salvatore Fiandaca
 email=pigrecoinfinito@gmail.com
 
@@ -38,6 +38,8 @@ deprecated=False
 server=False
 
 changelog=
+    0.4 La selezione di una regione ora zooma automaticamente la mappa
+        sulla sua estensione.
     0.3 Finestra di selezione regione: carica solo il servizio dell'anno
         che copre la regione scelta, mantenendo il caricamento completo
         con un click.

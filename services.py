@@ -34,6 +34,39 @@ YEAR_BY_REGION = {
 
 ALL_REGIONS = tuple(sorted(YEAR_BY_REGION))
 
+# Approximate region extents in EPSG:4326 (xmin, ymin, xmax, ymax), used only
+# to zoom the map canvas to a selected region - not meant for precise spatial
+# analysis. Derived from Eurostat GISCO NUTS2 boundaries (NUTS_RG_60M_2021),
+# with the Bolzano/Trento NUTS2 split merged back into Trentino-Alto Adige to
+# match REGIONS_BY_YEAR.
+REGION_EXTENT_4326 = {
+    'Abruzzo': (13.0306, 41.6879, 14.7796, 42.8946),
+    'Basilicata': (15.3350, 39.9235, 16.8673, 41.1399),
+    'Calabria': (15.6528, 37.9310, 17.1100, 40.1191),
+    'Campania': (13.7608, 40.0428, 15.7139, 41.4864),
+    'Emilia-Romagna': (9.2001, 43.7538, 12.7507, 45.1326),
+    'Friuli-Venezia Giulia': (12.4005, 45.5875, 13.9032, 46.6343),
+    'Lazio': (11.4499, 41.2232, 13.9779, 42.8347),
+    'Liguria': (7.5298, 43.7840, 10.0188, 44.6135),
+    'Lombardia': (8.5136, 44.6861, 11.4268, 46.5798),
+    'Marche': (12.2139, 42.6893, 13.9157, 43.9697),
+    'Molise': (13.9410, 41.3825, 15.1382, 42.0700),
+    'Piemonte': (6.6301, 44.0615, 9.2030, 46.4522),
+    'Puglia': (15.0077, 39.8804, 18.4343, 41.9270),
+    'Sardegna': (8.2316, 38.9578, 9.7494, 41.1960),
+    'Sicilia': (11.7600, 36.6104, 15.3432, 38.1933),
+    'Toscana': (9.6867, 42.3777, 12.2838, 44.4537),
+    'Trentino-Alto Adige': (10.4528, 45.6971, 12.4779, 47.0807),
+    'Umbria': (11.8950, 42.3988, 13.2353, 43.6108),
+    "Valle d'Aosta": (6.8024, 45.4685, 7.9366, 45.9224),
+    'Veneto': (10.6547, 44.7926, 13.0988, 46.6798),
+}
+
+
+def region_extent(region):
+    """Return the region's approximate (xmin, ymin, xmax, ymax) in EPSG:4326."""
+    return REGION_EXTENT_4326[region]
+
 
 def build_uri(url):
     """Build the arcgismapserver URI for an ImageServer endpoint.

@@ -38,7 +38,8 @@ Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
   una voce "Tutte le regioni". Scegli una regione e premi "Carica" per
   aggiungere al gruppo solo il servizio dell'anno corrispondente (il servizio
   copre comunque l'intera area ripresa quell'anno, non solo la regione
-  selezionata). La finestra resta aperta per caricare piu' regioni/anni di
+  selezionata), e la mappa si zooma automaticamente sull'estensione della
+  regione scelta. La finestra resta aperta per caricare piu' regioni/anni di
   seguito senza doverla riaprire.
 
 Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale

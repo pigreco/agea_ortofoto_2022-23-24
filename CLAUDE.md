@@ -19,7 +19,10 @@ only the single year covering a chosen Italian region.
   everything" action) and reports the result via `iface.messageBar()`. `show_region_dialog()`
   lazily creates and shows the [region_dialog.py](region_dialog.py) `RegionDialog`, wiring its
   `load_requested` signal to `_on_region_load_requested()`, which calls `services.load_year()`
-  for the region's year (or delegates to `run()` when "all regions" is chosen).
+  for the region's year (or delegates to `run()` when "all regions" is chosen), then
+  `_zoom_to_region()` pans/zooms `iface.mapCanvas()` to the region's extent (reprojected from
+  EPSG:4326 to the canvas CRS). Best-effort: any failure there is swallowed, since the layer is
+  already loaded by that point.
 - [region_dialog.py](region_dialog.py) — `RegionDialog`, a small non-modal `QDialog` with a combo
   box listing every region (from `services.ALL_REGIONS`, each annotated with its year) plus an
   "all regions" entry. Emits `load_requested(region_or_None)` on its "Carica" button instead of
@@ -29,6 +32,10 @@ only the single year covering a chosen Italian region.
   - `REGIONS_BY_YEAR` / `YEAR_BY_REGION` / `ALL_REGIONS` map each of the 20 Italian regions to the
     single year whose ImageServer covers it (AGEA reshoots a different subset of the country each
     year; see the coverage table in [README.md](README.md)).
+  - `REGION_EXTENT_4326` / `region_extent()` give each region's approximate EPSG:4326 bounding
+    box, used only to zoom the map canvas — not for precise spatial analysis. Sourced from
+    Eurostat GISCO NUTS2 boundaries, with the Bolzano/Trento NUTS2 split merged back into a single
+    Trentino-Alto Adige entry to match `REGIONS_BY_YEAR`.
   - `build_uri()` builds the `arcgismapserver` provider URI. **Both `layer` and `format` must
     stay empty** — an ImageServer has no numbered sub-layers, and setting an explicit format
     overrides the server's default (`jpgpng`), causing the service to return fully transparent

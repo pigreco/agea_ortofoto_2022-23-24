@@ -3,13 +3,26 @@
 
 import os
 
-from qgis.core import Qgis
+from qgis.core import (
+    Qgis,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsProject,
+    QgsRectangle,
+)
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from .region_dialog import RegionDialog
-from .services import GROUP_NAME, YEARS, YEAR_BY_REGION, load_all, load_year
+from .services import (
+    GROUP_NAME,
+    YEARS,
+    YEAR_BY_REGION,
+    load_all,
+    load_year,
+    region_extent,
+)
 
 
 class AgeaOrtofoto:
@@ -173,11 +186,39 @@ class AgeaOrtofoto:
             )
             return
 
+        self._zoom_to_region(region)
+
         bar.pushMessage(
             self.tr('AgEA Ortofoto'),
             self.tr('Ortofoto AgEA {year} caricata: copre {region} (e le '
-                    'altre regioni riprese nello stesso anno). Zooma sotto '
-                    '1:50.000 per vederla.').format(year=year, region=region),
+                    'altre regioni riprese nello stesso anno). Se non vedi '
+                    "l'immagine, zooma un po' di piu': sotto 1:50.000 "
+                    "l'ImageServer non restituisce contenuto.").format(
+                        year=year, region=region),
             level=Qgis.MessageLevel.Success,
             duration=6,
         )
+
+    def _zoom_to_region(self, region):
+        """Zoom the map canvas to the region's approximate extent.
+
+        Best-effort: the extents in services.py are approximate (meant for
+        framing, not analysis), so a zoom failure here should never stop the
+        layer from having been loaded successfully.
+        """
+        try:
+            canvas = self.iface.mapCanvas()
+            rect = QgsRectangle(*region_extent(region))
+            rect.scale(1.05)  # small padding around the region's edges
+
+            wgs84 = QgsCoordinateReferenceSystem('EPSG:4326')
+            canvas_crs = canvas.mapSettings().destinationCrs()
+            if canvas_crs != wgs84:
+                transform = QgsCoordinateTransform(
+                    wgs84, canvas_crs, QgsProject.instance())
+                rect = transform.transformBoundingBox(rect)
+
+            canvas.setExtent(rect)
+            canvas.refresh()
+        except Exception:  # pragma: no cover - defensive, best-effort zoom
+            pass
