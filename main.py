@@ -10,7 +10,7 @@ from qgis.core import (
     QgsProject,
     QgsRectangle,
 )
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QTimer
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -26,7 +26,7 @@ from .services import (
 
 
 class AgeaOrtofoto:
-    """Load AgEA orthophoto image services with a single click."""
+    """Load AgEA orthophoto image services: all years, or a single region."""
 
     def __init__(self, iface):
         """Initialize plugin.
@@ -65,21 +65,14 @@ class AgeaOrtofoto:
         return action
 
     def initGui(self):
-        """Create menu entries and toolbar icons."""
+        """Create the single menu entry and toolbar icon."""
         self.add_action(
             os.path.join(self.plugin_dir, 'icon.png'),
             text=self.tr('Carica Ortofoto AgEA'),
-            tooltip=self.tr('Aggiunge le Ortofoto AgEA {first}-{last} '
-                            'in un gruppo dedicato').format(
+            tooltip=self.tr('Carica le Ortofoto AgEA {first}-{last}: tutte '
+                            'e tre le annualita, oppure solo quella di una '
+                            'regione scelta').format(
                                 first=min(YEARS), last=max(YEARS)),
-            callback=self.run,
-            parent=self.iface.mainWindow(),
-        )
-        self.add_action(
-            os.path.join(self.plugin_dir, 'icon.png'),
-            text=self.tr('Seleziona regione AgEA...'),
-            tooltip=self.tr('Carica solo il servizio AgEA che copre una '
-                            'singola regione'),
             callback=self.show_region_dialog,
             parent=self.iface.mainWindow(),
         )
@@ -156,12 +149,21 @@ class AgeaOrtofoto:
 
         `region` is None for the "all regions" entry, which just reuses
         the one-click `run()` path; otherwise only the year covering that
-        region is loaded.
+        region is loaded. Either way, bring the QGIS main window (canvas
+        and message bar) back to the front afterwards, so the result is
+        visible without having to move or close the region dialog.
         """
         if region is None:
             self.run()
-            return
+        else:
+            self._load_region(region)
 
+        main_window = self.iface.mainWindow()
+        main_window.raise_()
+        main_window.activateWindow()
+
+    def _load_region(self, region):
+        """Load the single year covering `region` and zoom to its extent."""
         bar = self.iface.messageBar()
         year = YEAR_BY_REGION[region]
 
@@ -186,7 +188,11 @@ class AgeaOrtofoto:
             )
             return
 
-        self._zoom_to_region(region)
+        # Deferred to the next event-loop tick: when this is the first
+        # layer ever added to an empty project, QGIS's own "zoom to the
+        # new layer's extent" behaviour runs via a queued call and would
+        # otherwise override an immediate setExtent() here.
+        QTimer.singleShot(0, lambda: self._zoom_to_region(region))
 
         bar.pushMessage(
             self.tr('AgEA Ortofoto'),

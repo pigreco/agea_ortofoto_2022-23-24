@@ -36,30 +36,32 @@ ALL_REGIONS = tuple(sorted(YEAR_BY_REGION))
 
 # Approximate region extents in EPSG:4326 (xmin, ymin, xmax, ymax), used only
 # to zoom the map canvas to a selected region - not meant for precise spatial
-# analysis. Derived from Eurostat GISCO NUTS2 boundaries (NUTS_RG_60M_2021),
-# with the Bolzano/Trento NUTS2 split merged back into Trentino-Alto Adige to
-# match REGIONS_BY_YEAR.
+# analysis. Derived from Eurostat GISCO NUTS2 boundaries (NUTS_RG_01M_2021 -
+# the 1:1M resolution, needed so minor outlying islands aren't simplified
+# away and cut off: Sicilia's Pelagie islands, Puglia's Tremiti, Lazio's
+# Ponza/Ventotene). The Bolzano/Trento NUTS2 split is merged back into a
+# single Trentino-Alto Adige entry to match REGIONS_BY_YEAR.
 REGION_EXTENT_4326 = {
-    'Abruzzo': (13.0306, 41.6879, 14.7796, 42.8946),
-    'Basilicata': (15.3350, 39.9235, 16.8673, 41.1399),
-    'Calabria': (15.6528, 37.9310, 17.1100, 40.1191),
-    'Campania': (13.7608, 40.0428, 15.7139, 41.4864),
-    'Emilia-Romagna': (9.2001, 43.7538, 12.7507, 45.1326),
-    'Friuli-Venezia Giulia': (12.4005, 45.5875, 13.9032, 46.6343),
-    'Lazio': (11.4499, 41.2232, 13.9779, 42.8347),
-    'Liguria': (7.5298, 43.7840, 10.0188, 44.6135),
-    'Lombardia': (8.5136, 44.6861, 11.4268, 46.5798),
-    'Marche': (12.2139, 42.6893, 13.9157, 43.9697),
-    'Molise': (13.9410, 41.3825, 15.1382, 42.0700),
-    'Piemonte': (6.6301, 44.0615, 9.2030, 46.4522),
-    'Puglia': (15.0077, 39.8804, 18.4343, 41.9270),
-    'Sardegna': (8.2316, 38.9578, 9.7494, 41.1960),
-    'Sicilia': (11.7600, 36.6104, 15.3432, 38.1933),
-    'Toscana': (9.6867, 42.3777, 12.2838, 44.4537),
-    'Trentino-Alto Adige': (10.4528, 45.6971, 12.4779, 47.0807),
-    'Umbria': (11.8950, 42.3988, 13.2353, 43.6108),
-    "Valle d'Aosta": (6.8024, 45.4685, 7.9366, 45.9224),
-    'Veneto': (10.6547, 44.7926, 13.0988, 46.6798),
+    'Abruzzo': (13.0194, 41.6826, 14.7810, 42.8946),
+    'Basilicata': (15.3350, 39.8947, 16.8673, 41.1399),
+    'Calabria': (15.6309, 37.9159, 17.2058, 40.1439),
+    'Campania': (13.7608, 39.9915, 15.8059, 41.5073),
+    'Emilia-Romagna': (9.1981, 43.7319, 12.7550, 45.1385),
+    'Friuli-Venezia Giulia': (12.3214, 45.5817, 13.9181, 46.6469),
+    'Lazio': (11.4499, 40.7850, 14.0263, 42.8380),
+    'Liguria': (7.4953, 43.7766, 10.0704, 44.6762),
+    'Lombardia': (8.4984, 44.6801, 11.4268, 46.6347),
+    'Marche': (12.1855, 42.6874, 13.9157, 43.9697),
+    'Molise': (13.9410, 41.3639, 15.1545, 42.0700),
+    'Piemonte': (6.6274, 44.0609, 9.2136, 46.4641),
+    'Puglia': (14.9341, 39.7916, 18.5193, 42.1404),
+    'Sardegna': (8.1364, 38.8654, 9.8278, 41.3079),
+    'Sicilia': (11.9265, 35.4930, 15.6510, 38.8120),
+    'Toscana': (9.6867, 42.2382, 12.3710, 44.4727),
+    'Trentino-Alto Adige': (10.3826, 45.6734, 12.4779, 47.0917),
+    'Umbria': (11.8933, 42.3647, 13.2635, 43.6168),
+    "Valle d'Aosta": (6.8024, 45.4685, 7.9394, 45.9876),
+    'Veneto': (10.6237, 44.7926, 13.0994, 46.6801),
 }
 
 
