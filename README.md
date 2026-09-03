@@ -30,10 +30,19 @@ Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
 
 ## Utilizzo
 
-Clicca sull'icona "Carica Ortofoto AgEA" in barra degli strumenti: il gruppo
-con i tre servizi viene creato (o ricreato) nel progetto corrente. Per vedere
-le immagini e' necessario zoomare oltre la scala 1:50.000: a scale piu' basse
-gli ImageServer non restituiscono contenuto.
+- **Carica Ortofoto AgEA**: clicca l'icona in barra degli strumenti (o la voce
+  di menu) per caricare tutti e tre gli anni con un click. Il gruppo con i tre
+  servizi viene creato (o ricreato) nel progetto corrente.
+- **Seleziona regione AgEA...**: apre una finestra con un menu a tendina di
+  tutte le regioni italiane (ciascuna etichettata con l'anno che la copre) piu'
+  una voce "Tutte le regioni". Scegli una regione e premi "Carica" per
+  aggiungere al gruppo solo il servizio dell'anno corrispondente (il servizio
+  copre comunque l'intera area ripresa quell'anno, non solo la regione
+  selezionata). La finestra resta aperta per caricare piu' regioni/anni di
+  seguito senza doverla riaprire.
+
+Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale
+piu' basse gli ImageServer non restituiscono contenuto.
 
 ## Copertura per anno
 

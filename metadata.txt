@@ -2,24 +2,28 @@
 name=AgEA Ortofoto
 qgisMinimumVersion=3.20
 qgisMaximumVersion=4.99
-description=Load AgEA 2022, 2023 and 2024 orthophotos in one click, grouped together. / Carica in un click le Ortofoto AgEA 2022, 2023 e 2024 raggruppate.
-version=0.2
+description=Load AgEA 2022, 2023 and 2024 orthophotos in one click, grouped together, or pick a single Italian region. / Carica in un click le Ortofoto AgEA 2022, 2023 e 2024 raggruppate, oppure seleziona una singola regione.
+version=0.3
 author=Salvatore Fiandaca
 email=pigrecoinfinito@gmail.com
 
 about=Adds the three ArcGIS ImageServer services for the AgEA Orthophotos
     (2022, 2023, 2024) published on the AgEA Geoportal to the project,
     organized in an "AGEA 2022-23-24" group with 2024 on top and already
-    active. No external dependencies: it uses QGIS's native arcgismapserver
-    provider. The ImageServer must be queried with empty layer and format
-    parameters, otherwise the server returns fully transparent images.
+    active. A region-picker dialog can also load just the single year
+    covering one chosen Italian region. No external dependencies: it uses
+    QGIS's native arcgismapserver provider. The ImageServer must be queried
+    with empty layer and format parameters, otherwise the server returns
+    fully transparent images.
 
     Aggiunge al progetto i tre servizi ArcGIS ImageServer delle Ortofoto AgEA
     (2022, 2023, 2024) pubblicati dal Geoportale AgEA, organizzati in un gruppo
-    "AGEA 2022-23-24" con il 2024 in cima e gia' attivo.
-    Nessuna dipendenza esterna: usa il provider arcgismapserver nativo di QGIS.
-    Gli ImageServer vanno interrogati con i parametri layer e format vuoti,
-    altrimenti il server restituisce immagini trasparenti.
+    "AGEA 2022-23-24" con il 2024 in cima e gia' attivo. Una finestra di
+    selezione permette anche di caricare solo l'anno che copre una singola
+    regione italiana scelta. Nessuna dipendenza esterna: usa il provider
+    arcgismapserver nativo di QGIS. Gli ImageServer vanno interrogati con i
+    parametri layer e format vuoti, altrimenti il server restituisce immagini
+    trasparenti.
 
 tracker=https://github.com/pigreco/agea_ortofoto_2022-23-24/issues
 repository=https://github.com/pigreco/agea_ortofoto_2022-23-24
@@ -34,5 +38,8 @@ deprecated=False
 server=False
 
 changelog=
+    0.3 Finestra di selezione regione: carica solo il servizio dell'anno
+        che copre la regione scelta, mantenendo il caricamento completo
+        con un click.
     0.2 Compatibilita' con QGIS 4 / Qt6 (enum Qgis.MessageLevel qualificati).
     0.1 Prima versione: caricamento dei tre servizi in gruppo dedicato.
