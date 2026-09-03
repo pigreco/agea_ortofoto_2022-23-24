@@ -35,6 +35,18 @@ con i tre servizi viene creato (o ricreato) nel progetto corrente. Per vedere
 le immagini e' necessario zoomare oltre la scala 1:50.000: a scale piu' basse
 gli ImageServer non restituiscono contenuto.
 
+## Copertura per anno
+
+Ogni servizio copre un sottoinsieme diverso di regioni italiane, a rotazione
+sul triennio (dato ricavato dai valori distinti del campo `regione` nei
+footprint dei mosaic dataset):
+
+| Anno | Regioni coperte | N. |
+|---|---|---|
+| **2022** | Abruzzo, Liguria, Marche, Puglia, Sardegna, Sicilia, Toscana | 7 |
+| **2023** | Basilicata, Campania, Emilia-Romagna, Friuli-Venezia Giulia, Lazio, Trentino-Alto Adige, Umbria | 7 |
+| **2024** | Calabria, Lombardia, Molise, Piemonte, Valle d'Aosta, Veneto | 6 |
+
 ## Note tecniche
 
 Le richieste agli ImageServer vanno fatte con i parametri `layer` e `format`
