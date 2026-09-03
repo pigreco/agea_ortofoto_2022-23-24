@@ -6,11 +6,13 @@ gruppo dedicato del progetto.
 ## Cosa fa
 
 Aggiunge un pulsante in barra degli strumenti (e una voce nel menu Web) che
-carica i tre servizi ArcGIS ImageServer delle Ortofoto AgEA pubblicati sul
-[Geoportale AgEA](https://geoportale.agea.gov.it), organizzandoli in un gruppo
-**"AGEA 2022-23-24"** con il 2024 in cima, unico anno visibile all'avvio.
-Se il gruppo esiste gia' viene ricreato, cosi' i lanci successivi non
-accumulano layer duplicati.
+apre una finestra di selezione per caricare i servizi ArcGIS ImageServer
+delle Ortofoto AgEA pubblicati sul
+[Geoportale AgEA](https://geoportale.agea.gov.it) - tutti e tre gli anni
+insieme, oppure solo quello di una singola regione - organizzandoli in un
+gruppo **"AGEA 2022-23-24"** con il 2024 in cima, unico anno visibile
+all'avvio. Se il gruppo esiste gia' viene ricreato (o aggiornato), cosi' i
+lanci successivi non accumulano layer duplicati.
 
 Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
 
@@ -30,10 +32,36 @@ Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
 
 ## Utilizzo
 
-Clicca sull'icona "Carica Ortofoto AgEA" in barra degli strumenti: il gruppo
-con i tre servizi viene creato (o ricreato) nel progetto corrente. Per vedere
-le immagini e' necessario zoomare oltre la scala 1:50.000: a scale piu' basse
-gli ImageServer non restituiscono contenuto.
+Clicca l'icona **"Carica Ortofoto AgEA"** in barra degli strumenti (o la voce
+di menu): si apre una finestra con un menu a tendina che elenca tutte le
+regioni italiane (ciascuna etichettata con l'anno che la copre) piu' una voce
+**"Tutte le regioni"**, selezionata di default. Premi **"Carica"** per:
+
+- caricare tutti e tre gli anni in un click, lasciando selezionata "Tutte le
+  regioni"; oppure
+- caricare solo il servizio dell'anno che copre una regione scelta (il
+  servizio copre comunque l'intera area ripresa quell'anno, non solo la
+  regione selezionata) - la mappa si zooma automaticamente sulla sua
+  estensione.
+
+La finestra resta aperta per caricare piu' regioni/anni di seguito senza
+doverla riaprire; il canvas di QGIS torna comunque in primo piano dopo ogni
+caricamento, cosi' il risultato e' visibile subito.
+
+Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale
+piu' basse gli ImageServer non restituiscono contenuto.
+
+## Copertura per anno
+
+Ogni servizio copre un sottoinsieme diverso di regioni italiane, a rotazione
+sul triennio (dato ricavato dai valori distinti del campo `regione` nei
+footprint dei mosaic dataset):
+
+| Anno | Regioni coperte | N. |
+|---|---|---|
+| **2022** | Abruzzo, Liguria, Marche, Puglia, Sardegna, Sicilia, Toscana | 7 |
+| **2023** | Basilicata, Campania, Emilia-Romagna, Friuli-Venezia Giulia, Lazio, Trentino-Alto Adige, Umbria | 7 |
+| **2024** | Calabria, Lombardia, Molise, Piemonte, Valle d'Aosta, Veneto | 6 |
 
 ## Note tecniche
 
