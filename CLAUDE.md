@@ -9,6 +9,9 @@ A QGIS plugin (`AgEA Ortofoto`) that loads AGEA's Italian orthophoto ArcGIS Imag
 `arcgismapserver` raster provider (no external dependencies). A single toolbar/menu action opens
 a region-picker dialog that either loads all three years at once ("all regions", the default
 selection) or just the single year covering a chosen Italian region, zooming the canvas to it.
+A Processing algorithm (`AgEA Ortofoto > Esporta ritaglio ad alta risoluzione`) additionally
+exports a clip of one of the services to a GeoTIFF at a chosen pixel size, tiling and merging
+automatically — see [tiled_export_algorithm.py](tiled_export_algorithm.py) below.
 
 ## Architecture
 
@@ -60,13 +63,49 @@ selection) or just the single year covering a chosen Italian region, zooming the
     removing a layer via `project.removeMapLayer()` also removes its layer-tree node
     automatically — don't call `group.removeChildNode()` afterwards on the same node, it will
     already be a deleted C++ object.
+  - **High-resolution tiled export** (bottom of the file): `export_tiles()` / `merge_tiles()` /
+    their helpers back the Processing algorithm below (and the standalone
+    [scripts/export_tiled.py](scripts/export_tiled.py) CLI). **The one thing to know:** a single
+    `exportImage` request against these services silently comes back fully transparent below
+    `EMPIRICAL_MIN_PIXEL_SIZE` (~0.4 m/pixel) — confirmed by bisecting requests as small as 40×40 m,
+    so it is a resolution floor of the service itself, not a request-size limit (the documented
+    `maxImageWidth`/`maxImageHeight` capabilities, and total pixel count, both turned out not to be
+    the operative constraint — a single 1-billion-pixel request at 0.5 m/pixel came back valid). All
+    three services report a native `pixelSizeX/Y` of 0.2 m in their REST capabilities, but that
+    resolution is not actually deliverable through this API — do not "fix" the floor constant
+    without re-verifying against the live service. `export_tiles()` only tiles for a different
+    reason: to isolate and skip real nodata (an extent spilling past the flown coverage), bounded by
+    `max_empty_splits`/`min_tile_px` so a large genuinely-uncovered area isn't probed exhaustively.
+- [tiled_export_algorithm.py](tiled_export_algorithm.py) — `TiledExportAlgorithm`, a
+  `QgsProcessingAlgorithm` wrapping `services.export_tiles()`/`merge_tiles()` with the standard
+  Processing parameter form (year or custom URL, extent — including "use canvas extent", pixel
+  size, advanced tiling knobs, output GeoTIFF). Refuses to run below
+  `services.EMPIRICAL_MIN_PIXEL_SIZE` unless the advanced "Forza comunque" boolean is set, rather
+  than silently producing an empty file. Progress is only an estimate (the empty-retry tiling depth
+  isn't known upfront), nudged up whenever an unplanned retry-split happens.
+- [provider.py](provider.py) — `AgeaOrtofotoProvider`, the `QgsProcessingProvider` that registers
+  `TiledExportAlgorithm`. Instantiated once in `AgeaOrtofoto.__init__` and
+  added/removed from `QgsApplication.processingRegistry()` in `initGui()`/`unload()` — a provider
+  left registered after `unload()` would keep showing the algorithm (pointing at a dead module)
+  after the plugin is disabled/updated.
 - [metadata.txt](metadata.txt) — standard QGIS plugin metadata (name, version, min QGIS version,
   tags, changelog). Bump `version` and add a `changelog` entry when releasing changes.
+  `hasProcessingProvider=yes` must stay in sync with whether `provider.py` actually registers
+  something — the Plugin Manager reads it to decide whether to show a Processing entry at all.
+- [scripts/export_tiled.py](scripts/export_tiled.py) — a standalone CLI wrapper around the same
+  `services.export_tiles()`/`merge_tiles()` used by `TiledExportAlgorithm`, for running the export
+  outside QGIS Desktop (e.g. via the qgis-headless skill on WSL2/Linux). Not imported by the plugin
+  itself — see Development below for how it's kept out of plugin zips.
 
 ## Development
 
 There is no build step, test suite, or linter configured in this repo — it's a plain PyQGIS
 plugin loaded directly by QGIS from its plugin directory (or as a zip via the Plugin Manager).
+[scripts/](scripts/) is a dev-only CLI utility (not imported by the plugin — see its own
+Architecture entry above) excluded from plugin zips via [.gitattributes](.gitattributes)
+(`export-ignore`), which only takes effect on `git archive` output (GitHub's "Download ZIP" and
+auto-generated release archives) — a zip built by literally running `zip` over the working
+directory would still include it.
 
 To test changes, symlink or copy this directory into the QGIS profile's `python/plugins/`
 folder, then use the "Plugin Reloader" QGIS plugin (or restart QGIS) to pick up edits.

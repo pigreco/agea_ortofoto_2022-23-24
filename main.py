@@ -5,6 +5,7 @@ import os
 
 from qgis.core import (
     Qgis,
+    QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsProject,
@@ -14,6 +15,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QTimer
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+from .provider import AgeaOrtofotoProvider
 from .region_dialog import RegionDialog
 from .services import (
     GROUP_NAME,
@@ -41,6 +43,7 @@ class AgeaOrtofoto:
         self.toolbar = self.iface.addToolBar('AgeaOrtofotoToolbar')
         self.toolbar.setObjectName('AgeaOrtofotoToolbar')
         self.region_dialog = None
+        self.provider = AgeaOrtofotoProvider()
 
     def tr(self, message):
         """Translate string."""
@@ -76,9 +79,10 @@ class AgeaOrtofoto:
             callback=self.show_region_dialog,
             parent=self.iface.mainWindow(),
         )
+        QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
-        """Remove menu entries and toolbar icons."""
+        """Remove menu entries, toolbar icons and the Processing provider."""
         for action in self.actions:
             self.iface.removePluginWebMenu(self.menu, action)
             self.iface.removeToolBarIcon(action)
@@ -87,6 +91,7 @@ class AgeaOrtofoto:
         if self.region_dialog is not None:
             self.region_dialog.close()
             self.region_dialog = None
+        QgsApplication.processingRegistry().removeProvider(self.provider)
 
     def run(self):
         """Load the services and report the outcome in the message bar."""

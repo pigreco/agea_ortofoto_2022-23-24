@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 """AgEA ImageServer definitions and loading logic."""
 
-from qgis.core import QgsProject, QgsRasterLayer
+import os
+
+from qgis.core import (
+    QgsCoordinateTransform,
+    QgsProject,
+    QgsRasterFileWriter,
+    QgsRasterLayer,
+    QgsRasterPipe,
+    QgsRectangle,
+)
 
 GROUP_NAME = 'AGEA 2022-23-24'
 
@@ -173,4 +182,168 @@ def load_year(year, set_visible=True):
     node = group.insertLayer(0, layer)
     node.setItemVisibilityChecked(set_visible)
 
+
+# --- High-resolution tiled export ---------------------------------------
+#
+# A single `exportImage` request against an AgEA ImageServer silently comes
+# back fully transparent/nodata once the requested pixel size is finer than
+# roughly 0.4 m/pixel - confirmed by bisecting requests as small as 40x40 m,
+# so it is a resolution floor of the service itself, not a request-size
+# limit (the documented maxImageWidth/maxImageHeight capabilities and a
+# single request's total pixel count both turned out not to be the
+# operative constraint: a single 1-billion-pixel request at 0.5 m/pixel
+# came back valid). All three yearly services report the same native
+# pixelSizeX/Y of 0.2 m in their REST capabilities, but that resolution is
+# not actually deliverable through this API.
+#
+# What *does* still need tiling is real nodata: a requested extent can
+# genuinely spill past the flown coverage (a region border, open sea, ...),
+# which comes back blank no matter how small the tile or how coarse the
+# pixel size. export_tiles() below splits into quadrants to isolate and
+# skip only the genuinely-uncovered parts, and also splits proactively on
+# very large requests to keep memory/runtime bounded - not because size
+# itself causes blank output.
+
+EMPIRICAL_MIN_PIXEL_SIZE = 0.4
+DEFAULT_MAX_TILE_PIXELS = 50_000_000
+DEFAULT_MIN_TILE_PX = 500
+DEFAULT_MAX_EMPTY_SPLITS = 2
+TILE_CREATION_OPTIONS = ['COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9']
+
+
+def build_export_layer(url):
+    """Open an ImageServer as a standalone raster layer for clip export.
+
+    Not added to any project/group - used by the tiled-export tooling.
+    """
+    layer = QgsRasterLayer(build_uri(url), 'agea_export_source', 'arcgismapserver')
+    if not layer.isValid():
+        raise RuntimeError(layer.error().message())
     return layer
+
+
+def transform_extent(extent, src_crs, dst_crs, project=None):
+    """Reproject `extent` from src_crs to dst_crs (a no-op if they match)."""
+    if src_crs.authid() == dst_crs.authid():
+        return QgsRectangle(extent)
+    transform = QgsCoordinateTransform(src_crs, dst_crs, project or QgsProject.instance())
+    return transform.transformBoundingBox(extent)
+
+
+def tile_is_valid(path):
+    """Heuristic matching every empty response observed: a genuinely blank
+    tile has band 1 (and every other band) pegged at 0."""
+    layer = QgsRasterLayer(path, 'agea_export_check')
+    if not layer.isValid():
+        return False
+    return layer.dataProvider().bandStatistics(1).maximumValue > 0
+
+
+def export_tile(layer, crs, extent, pixel_size, out_path):
+    """Write a single GeoTIFF tile covering `extent` at `pixel_size`."""
+    width = max(1, round(extent.width() / pixel_size))
+    height = max(1, round(extent.height() / pixel_size))
+
+    pipe = QgsRasterPipe()
+    pipe.set(layer.dataProvider().clone())
+    writer = QgsRasterFileWriter(out_path)
+    writer.setCreateOptions(TILE_CREATION_OPTIONS)
+    writer.writeRaster(pipe, width, height, extent, crs)
+    return width, height
+
+
+def split_in_quadrants(extent):
+    xmin, ymin, xmax, ymax = (
+        extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum(),
+    )
+    xmid, ymid = (xmin + xmax) / 2.0, (ymin + ymax) / 2.0
+    return [
+        QgsRectangle(xmin, ymid, xmid, ymax),  # top-left
+        QgsRectangle(xmid, ymid, xmax, ymax),  # top-right
+        QgsRectangle(xmin, ymin, xmid, ymid),  # bottom-left
+        QgsRectangle(xmid, ymin, xmax, ymid),  # bottom-right
+    ]
+
+
+def export_tiles(layer, crs, extent, pixel_size, work_dir,
+                  max_tile_pixels=DEFAULT_MAX_TILE_PIXELS,
+                  min_tile_px=DEFAULT_MIN_TILE_PX,
+                  max_empty_splits=DEFAULT_MAX_EMPTY_SPLITS,
+                  on_tile=None, should_cancel=None):
+    """Recursively export `extent` into one or more GeoTIFF tiles.
+
+    Splits into quadrants whenever a request would exceed `max_tile_pixels`
+    (unconditional - just to bound memory/runtime), or whenever a tile comes
+    back empty (bounded by `max_empty_splits` and `min_tile_px`, so a large
+    genuinely-uncovered area is not probed exhaustively down to the pixel).
+
+    `on_tile(event, **info)` if given is called for progress reporting -
+    events are 'exported', 'empty' (about to retry smaller) and 'skipped'
+    (given up, treated as real nodata). `should_cancel()` if given is polled
+    between tiles to support early abort.
+
+    Returns the list of valid tile paths (possibly empty).
+    """
+    os.makedirs(work_dir, exist_ok=True)
+    counter = [0]
+
+    def cancelled():
+        return should_cancel() if should_cancel is not None else False
+
+    def emit(event, **info):
+        if on_tile is not None:
+            on_tile(event, **info)
+
+    def recurse(sub_extent, empty_splits_left):
+        if cancelled():
+            return []
+
+        width = max(1, round(sub_extent.width() / pixel_size))
+        height = max(1, round(sub_extent.height() / pixel_size))
+        too_small_to_split = width <= min_tile_px and height <= min_tile_px
+
+        if width * height > max_tile_pixels and not too_small_to_split:
+            tiles = []
+            for quadrant in split_in_quadrants(sub_extent):
+                if cancelled():
+                    break
+                tiles.extend(recurse(quadrant, empty_splits_left))
+            return tiles
+
+        counter[0] += 1
+        out_path = os.path.join(work_dir, 'tile_{:04d}.tif'.format(counter[0]))
+        export_tile(layer, crs, sub_extent, pixel_size, out_path)
+
+        if tile_is_valid(out_path):
+            emit('exported', path=out_path, width=width, height=height, extent=sub_extent)
+            return [out_path]
+
+        os.remove(out_path)
+        counter[0] -= 1  # reuse the number for whatever retry tile comes next
+
+        if too_small_to_split or empty_splits_left <= 0:
+            emit('skipped', width=width, height=height, extent=sub_extent)
+            return []
+
+        emit('empty', width=width, height=height, extent=sub_extent, retries_left=empty_splits_left)
+        tiles = []
+        for quadrant in split_in_quadrants(sub_extent):
+            if cancelled():
+                break
+            tiles.extend(recurse(quadrant, empty_splits_left - 1))
+        return tiles
+
+    return recurse(extent, max_empty_splits)
+
+
+def merge_tiles(tile_paths, output_path, creation_options=TILE_CREATION_OPTIONS):
+    """Mosaic `tile_paths` into a single compressed GeoTIFF at output_path."""
+    from osgeo import gdal
+
+    if not tile_paths:
+        raise RuntimeError('No valid tiles were produced - nothing to merge.')
+
+    vrt_path = output_path + '.vrt'
+    gdal.BuildVRT(vrt_path, tile_paths)
+    gdal.Translate(output_path, vrt_path, creationOptions=creation_options)
+    os.remove(vrt_path)

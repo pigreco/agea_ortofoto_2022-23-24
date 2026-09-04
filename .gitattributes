@@ -1,0 +1,4 @@
+# Dev-only CLI utility, not used by the plugin itself (see scripts/export_tiled.py) -
+# excluded from `git archive` output, and so from GitHub's "Download ZIP" /
+# auto-generated release archives, which is how plugin zips get built here.
+scripts/ export-ignore
