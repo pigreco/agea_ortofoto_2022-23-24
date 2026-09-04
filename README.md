@@ -55,6 +55,23 @@ caricamento, cosi' il risultato e' visibile subito.
 Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale
 piu' basse gli ImageServer non restituiscono contenuto.
 
+## Esportare un ritaglio ad alta risoluzione
+
+Oltre al caricamento in streaming, il plugin aggiunge un algoritmo nel
+**Processing Toolbox** (cerca "AgEA" o apri il gruppo **AgEA Ortofoto**):
+**"Esporta ritaglio ad alta risoluzione"**. Permette di salvare su disco un
+ritaglio di uno dei tre servizi come GeoTIFF, scegliendo l'estensione (anche
+"usa estensione mappa") e la dimensione pixel desiderata; se la richiesta e'
+troppo grande, o l'estensione sconfina fuori dalla copertura del volo, viene
+tassellata e riprovata automaticamente, poi tutto viene unito in un unico
+file.
+
+**Limite del servizio**: sotto **~0.4 m/pixel** gli ImageServer AGEA non
+restituiscono mai dati (immagine completamente vuota), a qualunque
+dimensione della richiesta - non e' un problema di tassellamento. L'algoritmo
+si ferma con un messaggio chiaro se si chiede una risoluzione piu' fine,
+invece di produrre un file vuoto.
+
 ## Copertura per anno
 
 Ogni servizio copre un sottoinsieme diverso di regioni italiane, a rotazione
