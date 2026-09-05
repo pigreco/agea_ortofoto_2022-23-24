@@ -76,13 +76,23 @@ automatically — see [tiled_export_algorithm.py](tiled_export_algorithm.py) bel
     without re-verifying against the live service. `export_tiles()` only tiles for a different
     reason: to isolate and skip real nodata (an extent spilling past the flown coverage), bounded by
     `max_empty_splits`/`min_tile_px` so a large genuinely-uncovered area isn't probed exhaustively.
+  - **CC BY 4.0 attribution:** AgEA publishes these services under CC BY 4.0, which permits
+    resampling to a different pixel size but requires attribution and noting that the material was
+    changed from the original. `attribution_metadata()` returns TIFFTAG_* items (COPYRIGHT,
+    IMAGEDESCRIPTION, SOFTWARE) that `merge_tiles()`'s optional `metadata` argument stamps into the
+    output GeoTIFF as real TIFF tags (so they survive the file being copied/renamed on its own);
+    `write_attribution_sidecar()` writes the same information, more verbosely, to a human-readable
+    `<output>_licenza.txt` next to it. Both the Processing algorithm and
+    [scripts/export_tiled.py](scripts/export_tiled.py) call both after `merge_tiles()`.
 - [tiled_export_algorithm.py](tiled_export_algorithm.py) — `TiledExportAlgorithm`, a
   `QgsProcessingAlgorithm` wrapping `services.export_tiles()`/`merge_tiles()` with the standard
   Processing parameter form (year or custom URL, extent — including "use canvas extent", pixel
   size, advanced tiling knobs, output GeoTIFF). Refuses to run below
   `services.EMPIRICAL_MIN_PIXEL_SIZE` unless the advanced "Forza comunque" boolean is set, rather
   than silently producing an empty file. Progress is only an estimate (the empty-retry tiling depth
-  isn't known upfront), nudged up whenever an unplanned retry-split happens.
+  isn't known upfront), nudged up whenever an unplanned retry-split happens. After merging, writes
+  the CC BY 4.0 attribution sidecar/TIFF-tags described above and reports the sidecar's path via
+  `feedback.pushInfo()`.
 - [provider.py](provider.py) — `AgeaOrtofotoProvider`, the `QgsProcessingProvider` that registers
   `TiledExportAlgorithm`. Instantiated once in `AgeaOrtofoto.__init__` and
   added/removed from `QgsApplication.processingRegistry()` in `initGui()`/`unload()` — a provider

@@ -46,10 +46,12 @@ from services import (  # noqa: E402
     DEFAULT_MAX_TILE_PIXELS,
     DEFAULT_MIN_TILE_PX,
     EMPIRICAL_MIN_PIXEL_SIZE,
+    attribution_metadata,
     build_export_layer,
     export_tiles,
     merge_tiles,
     transform_extent,
+    write_attribution_sidecar,
 )
 
 
@@ -149,8 +151,10 @@ def main(argv=None):
         print("{} valid tile(s) in {:.1f}s".format(len(tiles), time.time() - t0))
 
         print("Merging into {}...".format(args.output))
-        merge_tiles(tiles, args.output)
-        print("Done: {}".format(args.output))
+        merge_tiles(tiles, args.output, metadata=attribution_metadata(url, args.pixel_size))
+        sidecar_path = write_attribution_sidecar(args.output, url, args.pixel_size, extent, layer.crs())
+        print("Done: {} (CC BY 4.0 attribution written to {} and to the GeoTIFF's TIFF tags)".format(
+            args.output, sidecar_path))
 
         if not args.keep_tiles:
             shutil.rmtree(work_dir, ignore_errors=True)

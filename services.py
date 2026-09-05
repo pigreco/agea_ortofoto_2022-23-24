@@ -2,6 +2,7 @@
 """AgEA ImageServer definitions and loading logic."""
 
 import os
+from datetime import datetime
 
 from qgis.core import (
     QgsCoordinateTransform,
@@ -20,6 +21,15 @@ BASE_URL = (
 )
 
 YEARS = (2022, 2023, 2024)
+
+# AgEA publishes these orthophoto services under CC BY 4.0. That license
+# permits resampling to a different pixel size (it's an "Adapt" under the
+# license, no NoDerivs/ShareAlike clause involved) but requires attribution,
+# including - per its 3(a)(1)(C) - noting that the material was changed from
+# the original. attribution_metadata()/write_attribution_sidecar() below (see
+# the "High-resolution tiled export" section) exist to make that obligation
+# hard to miss when exporting a clip at a custom resolution.
+LICENSE_URL = 'https://creativecommons.org/licenses/by/4.0/'
 
 # Which regions each year's ImageServer covers, derived from the distinct
 # `regione` values in each service's mosaic dataset footprints (AgEA reshoots
@@ -336,8 +346,16 @@ def export_tiles(layer, crs, extent, pixel_size, work_dir,
     return recurse(extent, max_empty_splits)
 
 
-def merge_tiles(tile_paths, output_path, creation_options=TILE_CREATION_OPTIONS):
-    """Mosaic `tile_paths` into a single compressed GeoTIFF at output_path."""
+def merge_tiles(tile_paths, output_path, creation_options=TILE_CREATION_OPTIONS, metadata=None):
+    """Mosaic `tile_paths` into a single compressed GeoTIFF at output_path.
+
+    `metadata`, if given, is a dict of GDAL metadata items to stamp onto the
+    output - see attribution_metadata(). Standard TIFFTAG_* keys (COPYRIGHT,
+    IMAGEDESCRIPTION, SOFTWARE, ...) are written by the GTiff driver as real
+    TIFF tags, not just GDAL sidecar metadata, so they survive round-trips
+    through other tools and stay attached even if the file is copied or
+    renamed on its own.
+    """
     from osgeo import gdal
 
     if not tile_paths:
@@ -345,5 +363,92 @@ def merge_tiles(tile_paths, output_path, creation_options=TILE_CREATION_OPTIONS)
 
     vrt_path = output_path + '.vrt'
     gdal.BuildVRT(vrt_path, tile_paths)
-    gdal.Translate(output_path, vrt_path, creationOptions=creation_options)
+    translate_kwargs = {'creationOptions': creation_options}
+    if metadata:
+        translate_kwargs['metadataOptions'] = [
+            '{}={}'.format(key, value) for key, value in metadata.items()
+        ]
+    gdal.Translate(output_path, vrt_path, **translate_kwargs)
     os.remove(vrt_path)
+
+
+# --- CC BY 4.0 attribution -----------------------------------------------
+
+ATTRIBUTION_NOTE = (
+    "Fonte: AgEA (Agenzia per le Erogazioni in Agricoltura), servizio {source_url}. "
+    "Licenza: CC BY 4.0 ({license_url}). "
+    "Dato modificato rispetto all'originale: ricampionato a {pixel_size} m/pixel "
+    '(risoluzione nativa dichiarata dal servizio: 0.2 m/pixel).'
+)
+
+
+def attribution_metadata(source_url, pixel_size):
+    """GDAL metadata items to stamp onto an exported GeoTIFF via merge_tiles().
+
+    Keyed on the standard TIFFTAG_* names the GTiff driver recognises, so
+    they land as real TIFF tags (visible e.g. via `gdalinfo` or a layer's
+    Properties > Metadata in QGIS), not just GDAL-specific sidecar metadata.
+    """
+    note = ATTRIBUTION_NOTE.format(
+        source_url=source_url, license_url=LICENSE_URL, pixel_size=pixel_size)
+    return {
+        'TIFFTAG_COPYRIGHT': 'AgEA - CC BY 4.0 ({})'.format(LICENSE_URL),
+        'TIFFTAG_IMAGEDESCRIPTION': note,
+        'TIFFTAG_SOFTWARE': 'AgEA Ortofoto QGIS plugin',
+    }
+
+
+ATTRIBUTION_SIDECAR_TEMPLATE = """\
+Ritaglio ortofoto AgEA
+=======================
+
+Fonte:                 {source_url}
+Estensione esportata:   {extent} ({crs})
+Dimensione pixel:       {pixel_size} m/pixel
+                        (risoluzione nativa dichiarata dal servizio: 0.2 m/pixel;
+                        sotto ~0.4 m/pixel il servizio non eroga dati, quindi
+                        questo file e' comunque un ricampionamento rispetto
+                        all'originale)
+Data export:            {timestamp}
+
+Licenza: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         {license_url}
+
+La licenza CC BY 4.0 consente la condivisione e l'adattamento di questo
+materiale (incluso il ricampionamento a una dimensione di pixel diversa da
+quella originale), anche per uso commerciale, alla sola condizione di darne
+attribuzione. In caso di ridistribuzione di questo file o di un suo derivato,
+includere:
+  - la fonte: AgEA, servizio {source_url}
+  - il link alla licenza: {license_url}
+  - l'indicazione che il dato e' stato modificato rispetto all'originale
+    (ricampionato a {pixel_size} m/pixel)
+
+Questo file e' stato generato automaticamente dal plugin QGIS "AgEA Ortofoto"
+insieme al GeoTIFF corrispondente (che porta la stessa nota nei tag TIFF
+Copyright/ImageDescription).
+"""
+
+
+def write_attribution_sidecar(output_path, source_url, pixel_size, extent, crs):
+    """Write a '<output>_licenza.txt' sidecar with the CC BY 4.0 attribution.
+
+    Complements the TIFFTAG_* metadata attribution_metadata() stamps into the
+    GeoTIFF itself: the sidecar is the more human-readable copy (visible in a
+    plain file browser, no GIS needed), while the embedded tags are the one
+    that survives the file being copied or renamed on its own.
+
+    Returns the sidecar's path.
+    """
+    sidecar_path = os.path.splitext(output_path)[0] + '_licenza.txt'
+    text = ATTRIBUTION_SIDECAR_TEMPLATE.format(
+        source_url=source_url,
+        pixel_size=pixel_size,
+        extent=extent.toString(2),
+        crs=crs.authid(),
+        timestamp=datetime.now().strftime('%Y-%m-%d %H:%M'),
+        license_url=LICENSE_URL,
+    )
+    with open(sidecar_path, 'w', encoding='utf-8') as f:
+        f.write(text)
+    return sidecar_path

@@ -33,11 +33,14 @@ from .services import (
     DEFAULT_MAX_TILE_PIXELS,
     DEFAULT_MIN_TILE_PX,
     EMPIRICAL_MIN_PIXEL_SIZE,
+    LICENSE_URL,
     YEARS,
+    attribution_metadata,
     build_export_layer,
     export_tiles,
     merge_tiles,
     transform_extent,
+    write_attribution_sidecar,
 )
 
 
@@ -114,6 +117,14 @@ class TiledExportAlgorithm(QgsProcessingAlgorithm):
             'realmente non coperta venga sondata in modo esaustivo fino al singolo pixel.</p>'
             '<p><b>GeoTIFF di output:</b> il percorso del file finale, gia\' unito e compresso '
             '(DEFLATE), dove salvare il ritaglio.</p>'
+            '<h3>Attribuzione CC BY 4.0</h3>'
+            '<p>I servizi AgEA sono pubblicati con licenza CC BY 4.0, che permette di '
+            'ricampionare a una dimensione di pixel diversa dall\'originale ma richiede di '
+            'darne attribuzione e di segnalare che il dato e\' stato modificato. Per questo, '
+            'oltre al GeoTIFF, l\'algoritmo scrive automaticamente un file '
+            '<code>&lt;output&gt;_licenza.txt</code> con fonte, licenza e dimensione pixel '
+            'usata, e stampa la stessa nota nei tag TIFF Copyright/ImageDescription del '
+            'GeoTIFF stesso.</p>'
         ).format(floor=EMPIRICAL_MIN_PIXEL_SIZE)
 
     def initAlgorithm(self, config=None):
@@ -273,9 +284,16 @@ class TiledExportAlgorithm(QgsProcessingAlgorithm):
                 )
 
             feedback.pushInfo(self.tr('Unione di {n} tassello/i in corso...').format(n=len(tiles)))
-            merge_tiles(tiles, output_path)
+            merge_tiles(tiles, output_path, metadata=attribution_metadata(url, pixel_size))
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
+
+        sidecar_path = write_attribution_sidecar(output_path, url, pixel_size, extent, layer.crs())
+        feedback.pushInfo(
+            self.tr('Nota di attribuzione CC BY 4.0 scritta in {path} (e nei tag TIFF del '
+                    'GeoTIFF) - vedi {license_url}.').format(
+                path=sidecar_path, license_url=LICENSE_URL)
+        )
 
         feedback.setProgress(100)
         return {self.OUTPUT: output_path}
