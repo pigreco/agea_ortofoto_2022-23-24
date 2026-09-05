@@ -3,7 +3,7 @@ name=AgEA Ortofoto
 qgisMinimumVersion=3.20
 qgisMaximumVersion=4.99
 description=Load AgEA 2022, 2023 and 2024 orthophotos in one click, grouped together, or pick a single Italian region. / Carica in un click le Ortofoto AgEA 2022, 2023 e 2024 raggruppate, oppure seleziona una singola regione.
-version=0.6
+version=0.7
 author=Salvatore Fiandaca
 email=pigrecoinfinito@gmail.com
 
@@ -41,6 +41,11 @@ deprecated=False
 server=False
 
 changelog=
+    0.7 L'esportazione ad alta risoluzione ora scrive automaticamente
+        l'attribuzione CC BY 4.0 richiesta dalla licenza AgEA: un file
+        "<output>_licenza.txt" leggibile accanto al GeoTIFF, piu' gli
+        stessi dati (fonte, licenza, dimensione pixel usata) nei tag TIFF
+        Copyright/ImageDescription del GeoTIFF stesso.
     0.6 Nuovo algoritmo Processing "AgEA Ortofoto > Esporta ritaglio ad alta
         risoluzione": esporta un ritaglio a una dimensione pixel scelta,
         tassellando ed escludendo automaticamente le aree non coperte,
