@@ -54,7 +54,12 @@ doverla riaprire; il canvas di QGIS torna comunque in primo piano dopo ogni
 caricamento, cosi' il risultato e' visibile subito.
 
 Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale
-piu' basse gli ImageServer non restituiscono contenuto.
+piu' basse gli ImageServer non restituiscono contenuto. C'e' anche un limite
+superiore, intorno a **1:1500**: zoomando oltre (es. 1:1000) l'immagine sparisce
+di nuovo. E' lo stesso limite di ~0.4 m/pixel del servizio descritto sotto per
+l'export ad alta risoluzione, solo osservato in canvas invece che in export -
+a schermo standard (96 dpi) la scala 1:1500 corrisponde a circa 0.4 m/pixel
+richiesti al servizio, sotto i quali non torna mai dati.
 
 ## Esportare un ritaglio ad alta risoluzione
 
