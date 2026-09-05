@@ -54,7 +54,12 @@ doverla riaprire; il canvas di QGIS torna comunque in primo piano dopo ogni
 caricamento, cosi' il risultato e' visibile subito.
 
 Per vedere le immagini e' necessario zoomare oltre la scala 1:50.000: a scale
-piu' basse gli ImageServer non restituiscono contenuto.
+piu' basse gli ImageServer non restituiscono contenuto. C'e' anche un limite
+superiore, intorno a **1:1500**: zoomando oltre (es. 1:1000) l'immagine sparisce
+di nuovo. E' lo stesso limite di ~0.4 m/pixel del servizio descritto sotto per
+l'export ad alta risoluzione, solo osservato in canvas invece che in export -
+a schermo standard (96 dpi) la scala 1:1500 corrisponde a circa 0.4 m/pixel
+richiesti al servizio, sotto i quali non torna mai dati.
 
 ## Esportare un ritaglio ad alta risoluzione
 
@@ -101,6 +106,20 @@ vuoti: valorizzarli fa restituire al server immagini completamente
 trasparenti, perche' un ImageServer non ha sotto-layer numerati e un formato
 esplicito sovrascrive quello di default (`jpgpng`), l'unico che gestisce
 correttamente il nodata.
+
+Capabilities REST dei tre servizi (endpoint base + `?f=json`, o l'URL nudo nel
+browser per la REST Directory in HTML):
+
+- [Ortofoto AgEA 2022](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2022/ImageServer?f=json)
+- [Ortofoto AgEA 2023](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2023/ImageServer?f=json)
+- [Ortofoto AgEA 2024](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2024/ImageServer?f=json)
+
+Da queste capabilities si vede che il limite di zoom/risoluzione sopra non e'
+un artefatto del client: il servizio e' una tile cache pre-renderizzata
+(`singleFusedMapCache: true`, `cacheType: "Map"`) con `exportTilesAllowed:
+false`, la cui piramide di livelli si ferma a `maxLOD: 18` (`minPixelSize`
+~0.6 m/pixel, `maxScale` ~1:2257) - piu' grezza del dato nativo dichiarato
+(`pixelSizeX/Y` 0.2 m).
 
 ## Licenza
 

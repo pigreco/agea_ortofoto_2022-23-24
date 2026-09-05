@@ -76,6 +76,10 @@ automatically — see [tiled_export_algorithm.py](tiled_export_algorithm.py) bel
     without re-verifying against the live service. `export_tiles()` only tiles for a different
     reason: to isolate and skip real nodata (an extent spilling past the flown coverage), bounded by
     `max_empty_splits`/`min_tile_px` so a large genuinely-uncovered area isn't probed exhaustively.
+    The same floor is also what caps interactive canvas zoom (not just this export path): the
+    `arcgismapserver` provider's own on-screen rendering hits it too, going blank past roughly
+    **1:1500** at a standard 96 dpi screen (scale denominator × ~0.0002646 m ≈ requested m/pixel;
+    1:1500 ≈ 0.4 m/pixel) — see the README's "Per vedere le immagini" note.
   - **CC BY 4.0 attribution:** AgEA publishes these services under CC BY 4.0, which permits
     resampling to a different pixel size but requires attribution and noting that the material was
     changed from the original. `attribution_metadata()` returns TIFFTAG_* items (COPYRIGHT,
