@@ -73,6 +73,15 @@ dimensione della richiesta - non e' un problema di tassellamento. L'algoritmo
 si ferma con un messaggio chiaro se si chiede una risoluzione piu' fine,
 invece di produrre un file vuoto.
 
+**Attribuzione CC BY 4.0**: i dati AGEA sono pubblicati con licenza CC BY 4.0,
+che permette di ricampionare a una dimensione di pixel diversa dall'originale
+ma richiede attribuzione e la segnalazione che il dato e' stato modificato.
+Per questo, oltre al GeoTIFF, l'algoritmo scrive automaticamente un file
+`<output>_licenza.txt` con fonte, licenza e dimensione pixel usata, e
+stampa la stessa nota nei tag TIFF `Copyright`/`ImageDescription` del
+GeoTIFF stesso (visibili ad es. con `gdalinfo` o nelle Proprieta' > Metadati
+del layer in QGIS).
+
 ## Copertura per anno
 
 Ogni servizio copre un sottoinsieme diverso di regioni italiane, a rotazione
