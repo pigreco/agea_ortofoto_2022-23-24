@@ -107,6 +107,20 @@ trasparenti, perche' un ImageServer non ha sotto-layer numerati e un formato
 esplicito sovrascrive quello di default (`jpgpng`), l'unico che gestisce
 correttamente il nodata.
 
+Capabilities REST dei tre servizi (endpoint base + `?f=json`, o l'URL nudo nel
+browser per la REST Directory in HTML):
+
+- [Ortofoto AgEA 2022](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2022/ImageServer?f=json)
+- [Ortofoto AgEA 2023](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2023/ImageServer?f=json)
+- [Ortofoto AgEA 2024](https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2024/ImageServer?f=json)
+
+Da queste capabilities si vede che il limite di zoom/risoluzione sopra non e'
+un artefatto del client: il servizio e' una tile cache pre-renderizzata
+(`singleFusedMapCache: true`, `cacheType: "Map"`) con `exportTilesAllowed:
+false`, la cui piramide di livelli si ferma a `maxLOD: 18` (`minPixelSize`
+~0.6 m/pixel, `maxScale` ~1:2257) - piu' grezza del dato nativo dichiarato
+(`pixelSizeX/Y` 0.2 m).
+
 ## Licenza
 
 Codice distribuito con licenza [GPL v2](LICENSE) (o successiva).
