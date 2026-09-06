@@ -35,6 +35,8 @@ Non ha dipendenze esterne: usa il provider `arcgismapserver` nativo di QGIS.
    - Windows: `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
 3. Attiva il plugin da **Plugin > Gestisci e installa plugin**.
 
+oppure scarica lo zip dell'ultima [release](https://github.com/pigreco/agea_ortofoto_2022-23-24/releases/download/v0.7/agea_ortofoto_2022_23_24_v0.7.zip) e installalo, in QGIS, usando la procedure da file zip.
+
 ## Utilizzo
 
 Clicca l'icona **"Carica Ortofoto AgEA"** in barra degli strumenti (o la voce
@@ -126,9 +128,9 @@ false`, la cui piramide di livelli si ferma a `maxLOD: 18` (`minPixelSize`
 ## Licenza
 
 Codice distribuito con licenza [GPL v2](LICENSE) (o successiva).
-I dati delle ortofoto sono pubblicati da AGEA in licenza CC BY 4.0.
+I dati delle ortofoto sono pubblicati da AGEA in licenza **CC BY 4.0**.
 
 ## Ringraziamenti
 
-- [Andrea Borruso](https://github.com/aborruso) per l'idea
-- [AGEA](https://geoportale.agea.gov.it/) per aver condiviso i dati in CC BY 4.0
+- [Andrea Borruso](https://github.com/aborruso) per l'idea di usare i servizi ArcGIS ImageServer
+- [AGEA](https://geoportale.agea.gov.it/) per aver condiviso i dati in **CC BY 4.0**
