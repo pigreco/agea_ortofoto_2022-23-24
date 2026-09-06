@@ -121,6 +121,8 @@ false`, la cui piramide di livelli si ferma a `maxLOD: 18` (`minPixelSize`
 ~0.6 m/pixel, `maxScale` ~1:2257) - piu' grezza del dato nativo dichiarato
 (`pixelSizeX/Y` 0.2 m).
 
+> NB: Per usufruire di ortofoto a 0.20 m/px - in locale - è consigliato usare la procedura descritta nel geoprtale, ovvero richiesta tramite email.
+
 ## Licenza
 
 Codice distribuito con licenza [GPL v2](LICENSE) (o successiva).
